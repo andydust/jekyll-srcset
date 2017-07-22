@@ -59,7 +59,8 @@ module Jekyll
 
     def generate_image(site, src, attrs)
       cache = cache_dir(site)
-      sha = cache && Digest::SHA1.hexdigest(attrs.sort.inspect + File.read(File.join(site.source, src)) + (optimize?(site) ? "optimize" : ""))
+      file_src = URI.unescape(src)
+      sha = cache && Digest::SHA1.hexdigest(attrs.sort.inspect + File.read(File.join(site.source, file_src)) + (optimize?(site) ? "optimize" : ""))
       if sha
         if File.exists?(File.join(cache, sha))
           img_attrs = JSON.parse(File.read(File.join(cache,sha,"json")))
@@ -70,11 +71,11 @@ module Jekyll
 
           site.config['keep_files'] << filename unless site.config['keep_files'].include?(filename)
 
-          return img_attrs
+          return escape_src(img_attrs)
         end
       end
 
-      img = Image.read(File.join(site.source, src)).first
+      img = Image.read(File.join(site.source, file_src)).first
       img_attrs = {}
 
       if attrs["height"]
@@ -87,7 +88,7 @@ module Jekyll
 
       img_attrs["height"] = attrs["height"] if attrs["height"]
       img_attrs["width"]  = attrs["width"]  if attrs["width"]
-      img_attrs["src"] = src.sub(/(\.\w+)$/, "-#{img.columns}x#{img.rows}" + '\1')
+      img_attrs["src"] = file_src.sub(/(\.\w+)$/, "-#{img.columns}x#{img.rows}" + '\1')
 
       filename = img_attrs["src"].sub(/^\//, '')
       dest = File.join(site.dest, filename)
@@ -113,7 +114,13 @@ module Jekyll
         end
       end
 
-      img_attrs
+      escape_src(img_attrs)
+    end
+
+    private
+
+    def escape_src(attrs)
+      attrs.merge 'src' => URI.escape(attrs['src'])
     end
   end
 end
