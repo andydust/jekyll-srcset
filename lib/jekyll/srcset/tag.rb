@@ -88,7 +88,11 @@ module Jekyll
 
       img_attrs["height"] = attrs["height"] if attrs["height"]
       img_attrs["width"]  = attrs["width"]  if attrs["width"]
-      img_attrs["src"] = file_src.sub(/(\.\w+)$/, "-#{img.columns}x#{img.rows}" + '\1')
+
+      new_width = img.columns * scale
+      new_height = img.rows * scale
+
+      img_attrs["src"] = file_src.sub(/(\.\w+)$/, "-#{new_width.to_i}x#{new_height.to_i}" + '\1')
 
       filename = img_attrs["src"].sub(/^\//, '')
       dest = File.join(site.dest, filename)
